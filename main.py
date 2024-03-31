@@ -15,7 +15,7 @@ class Quoridor:
             for j in range(17):
                 if tabuleiro[i][j] == '.':
                     tabuleiro_convertido[i//2][j//2] = '.'
-
+         
         # Inicializa a fila para BFS e adiciona a posição inicial
         fila = deque([posicao_inicial])
         visitados = set(posicao_inicial)
@@ -67,7 +67,7 @@ class Quoridor:
         chegada_p1 = 8
         chegada_p2 = 0 
 
-        #ptabuleiro_antigo = tabuleiro
+        ptabuleiro_antigo = self.tabuleiro
 
 
         if orientacao == 'H':
@@ -77,18 +77,18 @@ class Quoridor:
             for offset in range(-1, 2):
                 self.tabuleiro[linha + offset][coluna] = '|'
 
-        # if self.existe_caminho(tabuleiro, posicao_p1, chegada_p1):
-        #     print("Ainda existe um caminho após adicionar a barreira.")
+        if self.existe_caminho(tabuleiro, posicao_p1, chegada_p1):
+            print("Ainda existe um caminho após adicionar a barreira.")
             
-        # else:
-        #     print("A barreira bloqueia todos os caminhos. Movimento inválido.")
-        #     return tabuleiro_antigo
+        else:
+            print("A barreira bloqueia todos os caminhos. Movimento inválido.")
+            return tabuleiro_antigo
 
-        # if self.existe_caminho(tabuleiro, posicao_p2, chegada_p2):
-        #     print("Ainda existe um caminho após adicionar a barreira.")
-        # else:
-        #     print("A barreira bloqueia todos os caminhos. Movimento inválido.")
-        #     return tabuleiro_antigo
+        if self.existe_caminho(tabuleiro, posicao_p2, chegada_p2):
+            print("Ainda existe um caminho após adicionar a barreira.")
+        else:
+            print("A barreira bloqueia todos os caminhos. Movimento inválido.")
+            return tabuleiro_antigo
         self.turno = self.oposto()
         return self.tabuleiro
 
@@ -197,6 +197,7 @@ while(True):
         orientacao = input("Digite a Orientação(H,V): ")
         tabuleiro_quoridor = jogo.adicionar_barreira(x, y, orientacao)  # Exemplo de adição de barreira horizontal
         jogo.imprimir_tabuleiro()
+        
     else:
         print("Selecione uma jogada valida: ")
 

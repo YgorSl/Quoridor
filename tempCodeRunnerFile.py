@@ -1,0 +1,1 @@
+        ptabuleiro_antigo = tabuleiro
