@@ -144,6 +144,37 @@ class Quoridor:
         
         self.turno = self.oposto()
         return True, nova_posicao
+    
+    def verifica_parede(self, linha, coluna, orientacao):
+        # Verifica se a posição está dentro dos limites do tabuleiro para paredes
+        if orientacao == 'H' and (linha < 0 or linha > 14 or coluna < 1 or coluna > 14):
+            return False
+        if orientacao == 'V' and (linha < 1 or linha > 14 or coluna < 0 or coluna > 14):
+            return False
+
+        # Verifica se a posição já está ocupada por outra parede ou casa
+        if self.tabuleiro[linha][coluna] != ' ' or self.tabuleiro[linha][coluna] == '.':
+            return False
+
+        # Verifica se a parede não cruza ou toca outra parede na mesma orientação
+        if orientacao == 'H':
+            if self.tabuleiro[linha][coluna-1] == '-' or self.tabuleiro[linha][coluna+1] == '-':
+                return False
+        if orientacao == 'V':
+            if self.tabuleiro[linha-1][coluna] == '|' or self.tabuleiro[linha+1][coluna] == '|':
+                return False
+
+        # Verifica se a parede não cobre as casas adjacentes
+        if orientacao == 'H':
+            if self.tabuleiro[linha-1][coluna] == '.' or self.tabuleiro[linha+1][coluna] == '.':
+                return False
+        if orientacao == 'V':
+            if self.tabuleiro[linha][coluna-1] == '.' or self.tabuleiro[linha][coluna+1] == '.':
+                return False
+
+        # Se passar por todas as verificações, a posição é válida
+        return True
+
 
 
 
@@ -170,8 +201,8 @@ class Quoridor:
     
     
 jogo = Quoridor()
-#tabuleiro_quoridor = jogo.criar_tabuleiro()
-
+#  tabuleiro_quoridor = jogo.criar_tabuleiro()
+jogo.imprimir_tabuleiro()
 vez_atual = "P1"
 
 #posicao_atual_p1 = jogo.encontrar_posicao(tabuleiro_quoridor, "P1")  # Posição inicial do jogador 1(Ta chu)
@@ -179,7 +210,7 @@ vez_atual = "P1"
 
 while(True):
 
-
+    
     posicao_da_vez = jogo.encontrar_posicao()
     print("Jogador:", jogo.turn())
     jogada = input("Escolha: Mover(M), ou Parede(P): ")
@@ -195,19 +226,24 @@ while(True):
         x = int(input("Digite a Linha: "))
         y = int(input("Digite a Coluna: "))
         orientacao = input("Digite a Orientação(H,V): ")
-        tabuleiro_quoridor = jogo.adicionar_barreira(x, y, orientacao)  # Exemplo de adição de barreira horizontal
+        if jogo.verifica_parede(x, y, orientacao):
+            jogo.adicionar_barreira( x, y, orientacao)
+        else:
+            print("Posição inválida para a parede.")
+
+        #tabuleiro_quoridor = jogo.adicionar_barreira(x, y, orientacao)  # Exemplo de adição de barreira horizontal
         jogo.imprimir_tabuleiro()
     else:
         print("Selecione uma jogada valida: ")
 
 
+    print("")
 
     # tabuleiro_quoridor = adicionar_barreira(tabuleiro_quoridor, 1, 7, 'V',posicao_atual_p1,posicao_atual_p2)  # Exemplo de adição de barreira horizontal
     # tabuleiro_quoridor = adicionar_barreira(tabuleiro_quoridor, 3, 9, 'H', posicao_atual_p1,posicao_atual_p2)  # Exemplo de adição de barreira horizontal
     #tabuleiro_quoridor = adicionar_barreira(tabuleiro_quoridor, 3, 9, 'H', posicao_atual_p1,posicao_atual_p2)  # Exemplo de adição de barreira horizontal
 
     #jogo.imprimir_tabuleiro(tabuleiro_quoridor)
-    print("")
     
 # Exemplo de uso da função
 #tabuleiro_quoridor = criar_tabuleiro()
