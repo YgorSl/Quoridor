@@ -191,11 +191,16 @@ class Quoridor:
 
         # Verifica se a parede não cobre as casas adjacentes
         if orientacao == 'H':
-            if self.tabuleiro[linha-1][coluna] == '.' or self.tabuleiro[linha+1][coluna] == '.':
+            if self.tabuleiro[linha-1][coluna] in ['.', "P1","P2"] or self.tabuleiro[linha+1][coluna] in['.',"P1","P2"]:
+                return False
+            if self.tabuleiro[linha][coluna-1] in ['.', "P1","P2"] or self.tabuleiro[linha][coluna+1] in['.',"P1","P2"]:
                 return False
         if orientacao == 'V':
-            if self.tabuleiro[linha][coluna-1] == '.' or self.tabuleiro[linha][coluna+1] == '.':
+            if self.tabuleiro[linha][coluna-1] in ['.', "P1","P2"] or self.tabuleiro[linha][coluna+1] in ['.', "P1","P2"]:
                 return False
+            if self.tabuleiro[linha+1][coluna] in ['.', "P1","P2"] or self.tabuleiro[linha-1][coluna] in ['.', "P1","P2"]:
+                return False
+            
 
         # Se passar por todas as verificações, a posição é válida
         return True
@@ -228,16 +233,31 @@ class Quoridor:
         # Encontre a posição atual do jogador
         posicao_atual = self.encontrar_posicao(self.turno)
 
+        direcoes = {'C': (-2, 0), 'B': (2, 0), 'E': (0, -2), 'D': (0, 2)}
+        #delta = direcoes[movimento]
+
         # Verifique os movimentos possíveis (Cima, Baixo, Esquerda, Direita)
-        for delta_linha, delta_coluna in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
-            nova_linha = posicao_atual[0] + delta_linha
-            nova_coluna = posicao_atual[1] + delta_coluna
+        #for delta_linha, delta_coluna in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
+        for direcao in direcoes:
+
+            delta = direcoes[direcao]
+
+            # nova_linha = posicao_atual[0] + delta_linha
+            # nova_coluna = posicao_atual[1] + delta_coluna
+
+            nova_linha, nova_coluna = (posicao_atual[0] + delta[0], posicao_atual[1] + delta[1])
+
+            posicao_intermediaria = (posicao_atual[0] + delta[0]//2, posicao_atual[1] + delta[1]//2)
+
+            nova_posicao = (posicao_atual[0] + delta[0], posicao_atual[1] + delta[1])
 
             # Verifique se a nova posição é válida
-            if 0 <= nova_linha < 17 and 0 <= nova_coluna < 17:
+            #if 0 <= nova_linha < 17 and 0 <= nova_coluna < 17:
+            if (0 <= nova_posicao[0] < 17 and 0 <= nova_posicao[1] < 17):
                 # Verifique se não há barreira no caminho
-                if estado[nova_linha][nova_coluna] == ' ':
-                    acoes.append(("M", (nova_linha, nova_coluna)))  # Ação de mover
+                #if estado[nova_linha][nova_coluna] == ' ':
+                if self.tabuleiro[posicao_intermediaria[0]][posicao_intermediaria[1]] not in ('-', '|'):
+                    acoes.append(("M", (direcao, nova_linha, nova_coluna)))  # Ação de mover
 
         # Verifique as posições para adicionar barreiras
         for linha in range(17):
@@ -258,7 +278,7 @@ class Quoridor:
         if tipo_acao == "M":
             # Ação de mover
             posicao_atual = self.encontrar_posicao(self.turno)
-            nova_linha, nova_coluna = parametros
+            direcao, nova_linha, nova_coluna = parametros
             novo_estado = [linha[:] for linha in estado]  # Crie uma cópia do estado atual
             novo_estado[posicao_atual[0]][posicao_atual[1]] = '.'  # Limpe a posição atual
             novo_estado[nova_linha][nova_coluna] = self.turno  # Atualize a nova posição
@@ -284,29 +304,49 @@ class Quoridor:
 
 
 
-    def avaliar_estado(self, estado):
-        # Exemplo de função de avaliação
-        pos_p1 = self.encontrar_posicao("P1")
-        pos_p2 = self.encontrar_posicao("P2")
+    # def avaliar_estado(self, estado):
+    #     # Exemplo de função de avaliação
+    #     pos_p1 = self.encontrar_posicao("P1")
+    #     pos_p2 = self.encontrar_posicao("P2")
 
-        # Distância vertical até a vitória
-        dist_p1 = 16 - pos_p1[0]
-        dist_p2 = pos_p2[0]
+    #     # Distância vertical até a vitória
+    #     dist_p1 = 16 - pos_p1[0]
+    #     dist_p2 = pos_p2[0]
 
-        # Penalização por barreiras
-        num_barreiras = sum(linha.count('-') + linha.count('|') for linha in estado)
-        penalizacao_barreiras = -num_barreiras
+    #     # Penalização por barreiras
+    #     num_barreiras = sum(linha.count('-') + linha.count('|') for linha in estado)
+    #     penalizacao_barreiras = -num_barreiras
 
-        # Pontuação total (ajuste conforme necessário)
-        pontuacao_p1 = dist_p1 + penalizacao_barreiras
-        pontuacao_p2 = dist_p2 + penalizacao_barreiras
+    #     # Pontuação total (ajuste conforme necessário)
+    #     pontuacao_p1 = dist_p1 + penalizacao_barreiras
+    #     pontuacao_p2 = dist_p2 + penalizacao_barreiras
 
-        # Retorne a pontuação para o jogador atual
-        if self.turno == "P1":
-            return pontuacao_p1
-        else:
-            return pontuacao_p2
+    #     # Retorne a pontuação para o jogador atual
+    #     if self.turno == "P1":
+    #         return pontuacao_p1
+    #     else:
+    #         return pontuacao_p2
 
+    def avaliar_estado(self):
+        minha_posicao = self.encontrar_posicao("P2")  # Peça da IA
+        objetivo_linha = 0  # Linha oposta (objetivo)
+        distancia_ate_objetivo = objetivo_linha - minha_posicao[0]
+
+        # Verifique se há paredes no caminho direto até o objetivo
+        caminho_livre = True
+        for linha in range(min(minha_posicao[0], objetivo_linha) + 1, max(minha_posicao[0], objetivo_linha)):
+            if self.tabuleiro[linha][minha_posicao[1]] == '|':
+                caminho_livre = False
+                break
+
+        # Pontuação: quanto menor a distância da IA até o objetivo, melhor
+        pontuacao = 10 - distancia_ate_objetivo
+
+        # Penalize se houver paredes no caminho direto
+        if not caminho_livre:
+            pontuacao -= 5
+
+        return pontuacao
 
 
     # def minimax(self, estado, profundidade, maximizador):
@@ -331,7 +371,7 @@ class Quoridor:
         
     def minimax(self, estado, profundidade, alfa, beta, maximizando):
         if profundidade == 0 or self.is_end():
-            return self.avaliar_estado(estado)
+            return self.avaliar_estado()
 
         if maximizando:
             melhor_valor = float("-inf")
@@ -354,12 +394,6 @@ class Quoridor:
                     break  # Poda alfa-beta
             return melhor_valor
 
-
-
-
-
-
-
     def melhor_jogada(self):
         melhor_pontuacao = float("-inf")
         melhor_acao = None
@@ -367,7 +401,7 @@ class Quoridor:
             novo_estado = self.aplicar_acao(self.tabuleiro, acao)
         
             # Avalie o estado usando a heurística
-            pontuacao = self.avaliar_estado(novo_estado)
+            pontuacao = self.avaliar_estado()
             
             # Chame o Minimax para avaliar os estados sucessores
             pontuacao += self.minimax(novo_estado, profundidade=3, alfa=float("-inf"), beta=float("inf"), maximizando=False)
@@ -404,15 +438,16 @@ while(True):
     if jogo.turno == "P2":
         proxima_jogada = jogo.melhor_jogada()  # Chame a função da IA para obter a próxima jogada
         tipo_acao, parametros = proxima_jogada
+        posicao_da_vez = jogo.encontrar_posicao(jogo.turno)
 
         if tipo_acao == "M":
-            sucesso, resultado = jogo.mover_peca(parametros)  # Aplicação do movimento
+            sucesso, resultado = jogo.mover_peca(posicao_da_vez, parametros[0])  # Aplicação do movimento
         elif tipo_acao == "P":
             x, y, orientacao = parametros
             jogo.adicionar_barreira(x, y, orientacao)  # Aplicação da barreira
 
 
-            jogo.imprimir_tabuleiro()  # Imprima o tabuleiro atualizado
+        jogo.imprimir_tabuleiro()  # Imprima o tabuleiro atualizado
             # Alterne o turno para o jogador (P1)
             #jogo.turno = "P1"
     else:
