@@ -92,6 +92,24 @@ class Quoridor:
         self.turno = self.oposto()
         return self.tabuleiro
 
+
+    def is_end(self):
+        pos_p1 = self.encontrar_posicao("P1")
+        if pos_p1[0] == 16:
+            return True
+    
+        pos_p2 = self.encontrar_posicao("P2")
+        if pos_p2[0] == 0:
+            return True
+        
+        return False
+        
+    def get_winner(self):
+        if self.player_one_pos[0] == 0:
+            return "P1"
+        else:
+            return "P2"
+
     def imprimir_tabuleiro(self):
         # Imprime o tabuleiro
         for linha in self.tabuleiro:
@@ -134,6 +152,13 @@ class Quoridor:
         if not (0 <= nova_posicao[0] < 17 and 0 <= nova_posicao[1] < 17):
             return False, "Movimento inválido: fora do tabuleiro."
         
+         # Verifica se ha um jogador na posi;'ao escolhida
+        
+         # Verifica se a próxima posição está ocupada por outro jogador
+        if self.tabuleiro[nova_posicao[0]][nova_posicao[1]] in ('P1', 'P2'):
+            # Pula para a próxima posição válida
+            nova_posicao = (nova_posicao[0] + delta[0], nova_posicao[1] + delta[1])
+        
         # Verifica se há uma barreira no caminho
         if self.tabuleiro[posicao_intermediaria[0]][posicao_intermediaria[1]] in ('-', '|'):
             return False, "Movimento inválido: há uma barreira no caminho."
@@ -149,7 +174,7 @@ class Quoridor:
         # Verifica se a posição está dentro dos limites do tabuleiro para paredes
         if orientacao == 'H' and (linha < 0 or linha > 14 or coluna < 1 or coluna > 14):
             return False
-        if orientacao == 'V' and (linha < 1 or linha > 14 or coluna < 0 or coluna > 14):
+        if orientacao == 'V' and (linha < 1 or linha > 14 or coluna < 0 or coMluna > 14):
             return False
 
         # Verifica se a posição já está ocupada por outra parede ou casa
@@ -178,12 +203,12 @@ class Quoridor:
 
 
 
-    def encontrar_posicao(self):
+    def encontrar_posicao(self, jogador):
         # Converte o tabuleiro para um array NumPy
         tabuleiro_np = np.array(self.tabuleiro)
         
         # Usa np.where para encontrar a posição do 'P1'
-        posicao = np.where(tabuleiro_np == self.turno)
+        posicao = np.where(tabuleiro_np == jogador)
         
         # np.where retorna uma tupla com arrays, pegamos o primeiro elemento de cada array
         return (posicao[0][0], posicao[1][0])
@@ -211,17 +236,20 @@ vez_atual = "P1"
 while(True):
 
     
-    posicao_da_vez = jogo.encontrar_posicao()
+    posicao_da_vez = jogo.encontrar_posicao(jogo.turno)
     print("Jogador:", jogo.turn())
     jogada = input("Escolha: Mover(M), ou Parede(P): ")
     if(jogada == "M"):
         movimento = input("Selecione o Movimento(B,C,E,D): ")
-        sucesso, resultado = jogo.mover_peca(posicao_da_vez, movimento)
-        if sucesso:
-            jogo.imprimir_tabuleiro()
-            print("")
+        if movimento not in ["B","C","E","D"]:
+            print("Movimento inválidoM")
         else:
-            print(resultado)
+            sucesso, resultado = jogo.mover_peca(posicao_da_vez, movimento)
+            if sucesso:
+                jogo.imprimir_tabuleiro()
+                print("")
+            else:
+                print(resultado)
     elif(jogada == "P"):
         x = int(input("Digite a Linha: "))
         y = int(input("Digite a Coluna: "))
@@ -236,6 +264,8 @@ while(True):
     else:
         print("Selecione uma jogada valida: ")
 
+    if jogo.is_end():
+        break
 
     print("")
 
@@ -248,7 +278,7 @@ while(True):
 # Exemplo de uso da função
 #tabuleiro_quoridor = criar_tabuleiro()
 
-
+print("Jogador", jogo.turno, "venceu")
 #movimento = 'E'  # Movimento para baixo
  # Lista de barreiras (ainda não implementada)
 
