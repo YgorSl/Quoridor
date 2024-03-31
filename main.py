@@ -283,6 +283,7 @@ class Quoridor:
             novo_estado[posicao_atual[0]][posicao_atual[1]] = '.'  # Limpe a posição atual
             novo_estado[nova_linha][nova_coluna] = self.turno  # Atualize a nova posição
             return novo_estado
+        
         elif tipo_acao == "P":
             # Ação de adicionar barreira
             linha, coluna, orientacao = parametros
@@ -327,26 +328,58 @@ class Quoridor:
     #     else:
     #         return pontuacao_p2
 
+    # def avaliar_estado(self):
+    #     minha_posicao = self.encontrar_posicao("P2")  # Peça da IA
+    #     objetivo_linha = 0  # Linha oposta (objetivo)
+    #     distancia_ate_objetivo = objetivo_linha - minha_posicao[0]
+
+    #     # Verifique se há paredes no caminho direto até o objetivo
+    #     caminho_livre = True
+    #     for linha in range(min(minha_posicao[0], objetivo_linha) + 1, max(minha_posicao[0], objetivo_linha)):
+    #         if self.tabuleiro[linha][minha_posicao[1]] == '|':
+    #             caminho_livre = False
+    #             break
+
+    #     # Pontuação: quanto menor a distância da IA até o objetivo, melhor
+    #     pontuacao = 10 - distancia_ate_objetivo
+
+    #     # Penalize se houver paredes no caminho direto
+    #     if not caminho_livre:
+    #         pontuacao -= 5
+
+    #     return pontuacao
+        
     def avaliar_estado(self):
         minha_posicao = self.encontrar_posicao("P2")  # Peça da IA
         objetivo_linha = 0  # Linha oposta (objetivo)
         distancia_ate_objetivo = objetivo_linha - minha_posicao[0]
 
-        # Verifique se há paredes no caminho direto até o objetivo
-        caminho_livre = True
-        for linha in range(min(minha_posicao[0], objetivo_linha) + 1, max(minha_posicao[0], objetivo_linha)):
-            if self.tabuleiro[linha][minha_posicao[1]] == '|':
-                caminho_livre = False
-                break
+        # Verifique a posição do jogador
+        posicao_jogador = self.encontrar_posicao("P1")  # Peça do jogador
+        distancia_jogador_ate_objetivo = objetivo_linha - posicao_jogador[0]
 
         # Pontuação: quanto menor a distância da IA até o objetivo, melhor
         pontuacao = 10 - distancia_ate_objetivo
 
-        # Penalize se houver paredes no caminho direto
-        if not caminho_livre:
-            pontuacao -= 5
+        # Bloqueie o jogador se ele estiver próximo do objetivo
+        if distancia_jogador_ate_objetivo <= 2:
+            pontuacao += 5
+
+        # Penalize se houver paredes no caminho direto da IA
+        if not self.caminho_livre(minha_posicao, posicao_jogador):
+            pontuacao -= 3
 
         return pontuacao
+
+    def caminho_livre(self, posicao1, posicao2):
+        linha1, coluna1 = posicao1
+        linha2, coluna2 = posicao2
+
+        # Verifique se não há paredes no caminho direto
+        for linha in range(min(linha1, linha2) + 1, max(linha1, linha2)):
+            if self.tabuleiro[linha][coluna1] == '|' or self.tabuleiro[linha][coluna2] == '|':
+                return False
+        return True
 
 
     # def minimax(self, estado, profundidade, maximizador):
