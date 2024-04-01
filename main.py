@@ -6,7 +6,7 @@ class Quoridor:
     def __init__(self):        
 
         self.tabuleiro = self.criar_tabuleiro()
-        self.turno = "P1"
+        self.turno = "P"
 
     def existe_caminho(tabuleiro, posicao_inicial, linha_final):
         # Converte o tabuleiro para um formato que facilite a verificação de barreiras
@@ -45,18 +45,18 @@ class Quoridor:
         return False
     def oposto(self):
 
-        if self.turno == "P1":
-            return "P2"
+        if self.turno == "P":
+            return "A"
         else:
-            return "P1"
+            return "P"
 
     def criar_tabuleiro(self):
         # Cria um tabuleiro 9x9 com espaços vazios ('.') e espaços para barreiras (' ')
         self.tabuleiro = [['.' if (linha % 2 == 0 and coluna % 2 == 0) else ' ' for coluna in range(17)] for linha in range(17)]
         
         # Adiciona as peças dos jogadores no tabuleiro
-        self.tabuleiro[0][8] = 'P1'  # Posição inicial do jogador 1
-        self.tabuleiro[16][8] = 'P2'  # Posição inicial do jogador 2
+        self.tabuleiro[0][8] = 'P'  # Posição inicial do jogador 1
+        self.tabuleiro[16][8] = 'A'  # Posição inicial do jogador 2
         
         return self.tabuleiro
 
@@ -94,11 +94,11 @@ class Quoridor:
 
 
     def is_end(self):
-        pos_p1 = self.encontrar_posicao("P1")
+        pos_p1 = self.encontrar_posicao("P")
         if pos_p1[0] == 16:
             return True
     
-        pos_p2 = self.encontrar_posicao("P2")
+        pos_p2 = self.encontrar_posicao("A")
         if pos_p2[0] == 0:
             return True
         
@@ -106,17 +106,25 @@ class Quoridor:
         
     def get_winner(self):
         if self.player_one_pos[0] == 0:
-            return "P1"
+            return "P"
         else:
-            return "P2"
+            return "A"
 
     def imprimir_tabuleiro(self):
-        # Imprime o tabuleiro
-        for linha in self.tabuleiro:
-            print(' '.join(linha))
+    # Imprime os números das colunas
+        print("    ", end="")
+        for coluna in range(1, 18, 2):  # Começa em 1 e incrementa de 2 em 2
+            print(f"{coluna // 1:2}", end="  ")
         print()
 
-
+        # Imprime o tabuleiro com números de linha e conteúdo
+        for linha, linha_tabuleiro in enumerate(self.tabuleiro):
+            # Ajusta o número da linha para começar em 1
+            print(f"{linha if linha % 2 != 0 else ' ':2}", end=" ")
+            for celula in linha_tabuleiro:
+                print(celula, end=" ")
+            print()
+        print()
 
     # def mover_peca(tabuleiro, posicao_atual, movimento, jogador):
     #     # Calcula a nova posição baseada no movimento
@@ -135,7 +143,7 @@ class Quoridor:
         
     #     # Move a peça
     #     tabuleiro[posicao_atual[0]][posicao_atual[1]] = '.'
-    #     tabuleiro[nova_posicao[0]][nova_posicao[1]] = jogador  # ou 'P2', dependendo do jogador
+    #     tabuleiro[nova_posicao[0]][nova_posicao[1]] = jogador  # ou 'A', dependendo do jogador
         
     #     return True, nova_posicao
 
@@ -155,7 +163,7 @@ class Quoridor:
          # Verifica se ha um jogador na posi;'ao escolhida
         
          # Verifica se a próxima posição está ocupada por outro jogador
-        if self.tabuleiro[nova_posicao[0]][nova_posicao[1]] in ('P1', 'P2'):
+        if self.tabuleiro[nova_posicao[0]][nova_posicao[1]] in ('P', 'A'):
             # Pula para a próxima posição válida
             nova_posicao = (nova_posicao[0] + delta[0], nova_posicao[1] + delta[1])
         
@@ -165,7 +173,7 @@ class Quoridor:
         
         # Move a peça
         self.tabuleiro[posicao_atual[0]][posicao_atual[1]] = '.'
-        self.tabuleiro[nova_posicao[0]][nova_posicao[1]] = self.turno  # 'P1' ou 'P2'
+        self.tabuleiro[nova_posicao[0]][nova_posicao[1]] = self.turno  # 'P' ou 'A'
         
         self.turno = self.oposto()
         return True, nova_posicao
@@ -191,14 +199,14 @@ class Quoridor:
 
         # Verifica se a parede não cobre as casas adjacentes
         if orientacao == 'H':
-            if self.tabuleiro[linha-1][coluna] in ['.', "P1","P2"] or self.tabuleiro[linha+1][coluna] in['.',"P1","P2"]:
+            if self.tabuleiro[linha-1][coluna] in ['.', "P","A"] or self.tabuleiro[linha+1][coluna] in['.',"P","A"]:
                 return False
-            if self.tabuleiro[linha][coluna-1] in ['.', "P1","P2"] or self.tabuleiro[linha][coluna+1] in['.',"P1","P2"]:
+            if self.tabuleiro[linha][coluna-1] in ['.', "P","A"] or self.tabuleiro[linha][coluna+1] in['.',"P","A"]:
                 return False
         if orientacao == 'V':
-            if self.tabuleiro[linha][coluna-1] in ['.', "P1","P2"] or self.tabuleiro[linha][coluna+1] in ['.', "P1","P2"]:
+            if self.tabuleiro[linha][coluna-1] in ['.', "P","A"] or self.tabuleiro[linha][coluna+1] in ['.', "P","A"]:
                 return False
-            if self.tabuleiro[linha+1][coluna] in ['.', "P1","P2"] or self.tabuleiro[linha-1][coluna] in ['.', "P1","P2"]:
+            if self.tabuleiro[linha+1][coluna] in ['.', "P","A"] or self.tabuleiro[linha-1][coluna] in ['.', "P","A"]:
                 return False
             
 
@@ -212,7 +220,7 @@ class Quoridor:
         # Converte o tabuleiro para um array NumPy
         tabuleiro_np = np.array(self.tabuleiro)
         
-        # Usa np.where para encontrar a posição do 'P1'
+        # Usa np.where para encontrar a posição do 'P'
         posicao = np.where(tabuleiro_np == jogador)
         
         # np.where retorna uma tupla com arrays, pegamos o primeiro elemento de cada array
@@ -307,8 +315,8 @@ class Quoridor:
 
     # def avaliar_estado(self, estado):
     #     # Exemplo de função de avaliação
-    #     pos_p1 = self.encontrar_posicao("P1")
-    #     pos_p2 = self.encontrar_posicao("P2")
+    #     pos_p1 = self.encontrar_posicao("P")
+    #     pos_p2 = self.encontrar_posicao("A")
 
     #     # Distância vertical até a vitória
     #     dist_p1 = 16 - pos_p1[0]
@@ -323,13 +331,13 @@ class Quoridor:
     #     pontuacao_p2 = dist_p2 + penalizacao_barreiras
 
     #     # Retorne a pontuação para o jogador atual
-    #     if self.turno == "P1":
+    #     if self.turno == "P":
     #         return pontuacao_p1
     #     else:
     #         return pontuacao_p2
 
     # def avaliar_estado(self):
-    #     minha_posicao = self.encontrar_posicao("P2")  # Peça da IA
+    #     minha_posicao = self.encontrar_posicao("A")  # Peça da IA
     #     objetivo_linha = 0  # Linha oposta (objetivo)
     #     distancia_ate_objetivo = objetivo_linha - minha_posicao[0]
 
@@ -350,12 +358,12 @@ class Quoridor:
     #     return pontuacao
         
     def avaliar_estado(self):
-        minha_posicao = self.encontrar_posicao("P2")  # Peça da IA
+        minha_posicao = self.encontrar_posicao("A")  # Peça da IA
         objetivo_linha = 0  # Linha oposta (objetivo)
         distancia_ate_objetivo = objetivo_linha - minha_posicao[0]
 
         # Verifique a posição do jogador
-        posicao_jogador = self.encontrar_posicao("P1")  # Peça do jogador
+        posicao_jogador = self.encontrar_posicao("P")  # Peça do jogador
         distancia_jogador_ate_objetivo = objetivo_linha - posicao_jogador[0]
 
         # Pontuação: quanto menor a distância da IA até o objetivo, melhor
@@ -460,15 +468,15 @@ class Quoridor:
 jogo = Quoridor()
 #  tabuleiro_quoridor = jogo.criar_tabuleiro()
 jogo.imprimir_tabuleiro()
-vez_atual = "P1"
+vez_atual = "P"
 
-#posicao_atual_p1 = jogo.encontrar_posicao(tabuleiro_quoridor, "P1")  # Posição inicial do jogador 1(Ta chu)
-#posicao_atual_p2 = jogo.encontrar_posicao(tabuleiro_quoridor, "P2")  # Posição inicial do jogador 1(Ta chu)
+#posicao_atual_p1 = jogo.encontrar_posicao(tabuleiro_quoridor, "P")  # Posição inicial do jogador 1(Ta chu)
+#posicao_atual_p2 = jogo.encontrar_posicao(tabuleiro_quoridor, "A")  # Posição inicial do jogador 1(Ta chu)
 
 
 while(True):
 
-    if jogo.turno == "P2":
+    if jogo.turno == "A":
         proxima_jogada = jogo.melhor_jogada()  # Chame a função da IA para obter a próxima jogada
         tipo_acao, parametros = proxima_jogada
         posicao_da_vez = jogo.encontrar_posicao(jogo.turno)
@@ -482,7 +490,7 @@ while(True):
 
         jogo.imprimir_tabuleiro()  # Imprima o tabuleiro atualizado
             # Alterne o turno para o jogador (P1)
-            #jogo.turno = "P1"
+            #jogo.turno = "P"
     else:
         posicao_da_vez = jogo.encontrar_posicao(jogo.turno)
         print("Jogador:", jogo.turn())
@@ -520,7 +528,7 @@ while(True):
 def jogada_humano():
 
 
-    if jogo.turno == "P2":
+    if jogo.turno == "A":
         proxima_jogada = melhor_jogada()  # Chame a função da IA para obter a próxima jogada
         tipo_acao, parametros = proxima_jogada
 
@@ -533,7 +541,7 @@ def jogada_humano():
         if sucesso:
             jogo.imprimir_tabuleiro()  # Imprima o tabuleiro atualizado
             # Alterne o turno para o jogador (P1)
-            #jogo.turno = "P1"
+            #jogo.turno = "P"
     else:
         print("Jogador:", jogo.turn())
         jogada = input("Escolha: Mover(M), ou Parede(P): ")
@@ -605,8 +613,8 @@ print("Jogador", jogo.turno, "venceu")
 
 # print("")
 
-# posicao_atual_p1 = encontrar_posicao(tabuleiro_quoridor, "P1")  # Posição inicial do jogador 1(Ta chu)
-# posicao_atual_p2 = encontrar_posicao(tabuleiro_quoridor, "P2")  # Posição inicial do jogador 1(Ta chu)
+# posicao_atual_p1 = encontrar_posicao(tabuleiro_quoridor, "P")  # Posição inicial do jogador 1(Ta chu)
+# posicao_atual_p2 = encontrar_posicao(tabuleiro_quoridor, "A")  # Posição inicial do jogador 1(Ta chu)
 # sucesso, resultado = mover_peca(tabuleiro_quoridor, posicao_atual_p1, movimento)
 # if sucesso:
 #     imprimir_tabuleiro(tabuleiro_quoridor)
