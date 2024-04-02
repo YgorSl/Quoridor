@@ -115,19 +115,19 @@ class Quoridor:
         return self.tabuleiro
 
 
-    def is_end(self):
-        pos_p1 = self.encontrar_posicao("P", self.tabuleiro)
+    def is_end(self, tabuleiro):
+        pos_p1 = self.encontrar_posicao("P", tabuleiro)
         if pos_p1[0] == 16:
             return True
     
-        pos_p2 = self.encontrar_posicao("A", self.tabuleiro)
+        pos_p2 = self.encontrar_posicao("A", tabuleiro)
         if pos_p2[0] == 0:
             return True
         
         return False
         
-    def get_winner(self):
-        if self.encontrar_posicao("A", self.tabuleiro)[0] == 0:
+    def get_winner(self, tabuleiro):
+        if self.encontrar_posicao("A", tabuleiro)[0] == 0:
             return "A"
         else:
             return "P"
@@ -421,17 +421,36 @@ class Quoridor:
 
             # Nas primeiras jogadas, priorize o movimento em direção ao objetivo
             if distancia_ate_objetivo > 12:  # Considera que o jogo está no início
-                pontuacao += (16 - distancia_ate_objetivo)
+                pontuacao -= (16 - distancia_ate_objetivo)
 
             # Evite colocar barreiras inicialmente
             if self.qtd_paredes(turno)> 8:  # Se o self.turno_mm ainda tem muitas barreiras
-                pontuacao -= 1  # Penaliza a colocação de barreiras
+                pontuacao += 1  # Penaliza a colocação de barreiras
 
             # Se o adversário estiver próximo do objetivo, considere bloquear seu caminho
-            posicao_adversario = self.encontrar_posicao("P", estado)
+            posicao_adversario = self.encontrar_posicao("A", estado)
+            if posicao_adversario[0] < 16 and posicao_adversario[1] < 16:
+                if estado[posicao_adversario[0]+1][posicao_adversario[1]+1] == "|":
+                    pontuacao -=8
+                
+                if estado[posicao_adversario[0]+1][posicao_adversario[1]+1] == "-":
+                    pontuacao +=1
+            if posicao_adversario[0] > 0 and posicao_adversario[1] > 0:
+                if estado[posicao_adversario[0]-1][posicao_adversario[1]-1] == "|":
+                    pontuacao -=8
+                
+                if estado[posicao_adversario[0]-1][posicao_adversario[1]-1] == "-":
+                    pontuacao -=8
+
             distancia_adversario_ate_objetivo = abs(objetivo - posicao_adversario[0])
-            if distancia_adversario_ate_objetivo <= 4:
-                pontuacao += 5  # Incentiva a colocação de barreiras para bloquear o adversário
+            if distancia_adversario_ate_objetivo <= 9:
+                pontuacao -= 5  # Incentiva a colocação de barreiras para bloquear o adversário
+
+            if self.is_end(estado):
+                if self.get_winner(estado) == "P":
+                    return float("-inf")
+                else:
+                    return float("inf")
         else:
              # Define o objetivo final para cada jogador
             objetivo = 16 if turno == "P" else 0
@@ -447,20 +466,39 @@ class Quoridor:
 
             # Nas primeiras jogadas, priorize o movimento em direção ao objetivo
             if distancia_ate_objetivo > 12:  # Considera que o jogo está no início
-                pontuacao -= (16 - distancia_ate_objetivo)
+                pontuacao += (16 - distancia_ate_objetivo)
 
             # Evite colocar barreiras inicialmente
             if self.qtd_paredes(turno)> 8:  # Se o self.turno_mm ainda tem muitas barreiras
-                pontuacao += 1  # Penaliza a colocação de barreiras
+                pontuacao -= 1  # Penaliza a colocação de barreiras
 
             # Se o adversário estiver próximo do objetivo, considere bloquear seu caminho
             posicao_adversario = self.encontrar_posicao("P", estado)
+            if posicao_adversario[0] < 16 and posicao_adversario[1] < 16:
+                if estado[posicao_adversario[0]+1][posicao_adversario[1]+1] == "|":
+                    pontuacao +=6
+                
+                if estado[posicao_adversario[0]+1][posicao_adversario[1]+1] == "-":
+                    pontuacao +=8
+            if posicao_adversario[0] > 0 and posicao_adversario[1] > 0:
+                if estado[posicao_adversario[0]-1][posicao_adversario[1]-1] == "|":
+                    pontuacao +=8
+                
+                if estado[posicao_adversario[0]-1][posicao_adversario[1]-1] == "-":
+                    pontuacao -=3
+
+
             distancia_adversario_ate_objetivo = abs(objetivo - posicao_adversario[0])
-            if distancia_adversario_ate_objetivo <= 4:
-                pontuacao -= 5  # Incentiva a colocação de barreiras para bloquear o adversário
+            if distancia_adversario_ate_objetivo <= 9:
+                pontuacao += 5  # Incentiva a colocação de barreiras para bloquear o adversário
             #return 10 * (abs(self.encontrar_posicao("A", estado)[0] - 16))
 
         # Retorna a pontuação avaliada
+            if self.is_end(estado):
+                if self.get_winner(estado) == "P":
+                    return float("-inf")
+                else:
+                    return float("inf")
         return pontuacao
 
     def caminho_livre(self, posicao1, posicao2, tabuleiro):
@@ -474,7 +512,7 @@ class Quoridor:
         return True
         
     def minimax(self, estado,turno, profundidade, alfa, beta, maximizando):
-        if profundidade == 0 or self.is_end():
+        if profundidade == 0 or self.is_end(estado):
             return self.avaliar_estado(estado, turno)
 
         if maximizando:
@@ -574,10 +612,10 @@ while(True):
         else:
             print("Selecione uma jogada valida: ")
 
-    if jogo.is_end():
+    if jogo.is_end(jogo.tabuleiro):
         break
 
     print("")
 
-print("Jogador", jogo.get_winner(), "venceu")
+print("Jogador", jogo.get_winner(jogo.tabuleiro), "venceu")
 
