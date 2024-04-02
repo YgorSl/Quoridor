@@ -127,10 +127,10 @@ class Quoridor:
         return False
         
     def get_winner(self):
-        if self.player_one_pos[0] == 0:
-            return "P"
-        else:
+        if self.encontrar_posicao("A", self.tabuleiro)[0] == 0:
             return "A"
+        else:
+            return "P"
 
     def imprimir_tabuleiro(self):
     # Imprime os números das colunas
@@ -305,15 +305,15 @@ class Quoridor:
                     acoes.append(("M", (direcao, nova_linha, nova_coluna)))  # Ação de mover
 
         # Verifique as posições para adicionar barreiras
-        posicao_jogador = self.encontrar_posicao('P', estado)  # Peça do jogador
+        posicao_jogador = self.encontrar_posicao(turno, estado)  # Peça do jogador
         distancia_jogador_ate_objetivo = 16 - posicao_jogador[0]
 
         # Pontuação: quanto menor a distância da IA até o objetivo, melhor
 
         #So começa a tentar colocar barreira se for menor = 5 a distancia do oponente
         if distancia_jogador_ate_objetivo <= 10:
-             for linha in range(max(1, posicao_jogador[0] - 3), min(16, posicao_jogador[0] + 4)):
-                for coluna in range(max(1, posicao_jogador[1] - 3), min(16, posicao_jogador[1] + 4)):
+             for linha in range(posicao_jogador[0] - 1,  posicao_jogador[0] + 1):
+                for coluna in range( posicao_jogador[1] - 1, posicao_jogador[1] + 1):
                     if estado[linha][coluna] == ' ':
                         # Verifique se é possível adicionar uma barreira horizontal
                         if self.verifica_parede(linha, coluna, 'H', estado, turno):
@@ -401,41 +401,67 @@ class Quoridor:
     #     return pontuacao
     
     def avaliar_estado(self, estado, turno):
-
+        pontuacao = 0
         if turno == "P":
-            return 10 * abs(self.encontrar_posicao("P", estado)[0])
+            #return 10 * abs(self.encontrar_posicao("P", estado)[0])
+        
+
+
+            # Define o objetivo final para cada jogador
+            objetivo = 16 if turno == "P" else 0
+
+            # Encontra a posição inicial do jogador
+            posicao_inicial = self.encontrar_posicao(turno, estado)
+
+            # Calcula a distância até o objetivo
+            distancia_ate_objetivo = abs(objetivo - posicao_inicial[0])
+
+            # Inicializa a pontuação
+            pontuacao = 0
+
+            # Nas primeiras jogadas, priorize o movimento em direção ao objetivo
+            if distancia_ate_objetivo > 12:  # Considera que o jogo está no início
+                pontuacao += (16 - distancia_ate_objetivo)
+
+            # Evite colocar barreiras inicialmente
+            if self.qtd_paredes(turno)> 8:  # Se o self.turno_mm ainda tem muitas barreiras
+                pontuacao -= 1  # Penaliza a colocação de barreiras
+
+            # Se o adversário estiver próximo do objetivo, considere bloquear seu caminho
+            posicao_adversario = self.encontrar_posicao("P", estado)
+            distancia_adversario_ate_objetivo = abs(objetivo - posicao_adversario[0])
+            if distancia_adversario_ate_objetivo <= 4:
+                pontuacao += 5  # Incentiva a colocação de barreiras para bloquear o adversário
         else:
-            return 10 * (abs(self.encontrar_posicao("A", estado)[0] - 16))
+             # Define o objetivo final para cada jogador
+            objetivo = 16 if turno == "P" else 0
 
+            # Encontra a posição inicial do jogador
+            posicao_inicial = self.encontrar_posicao(turno, estado)
 
-        # # Define o objetivo final para cada jogador
-        # objetivo = 16 if self.turno_mm == "P" else 0
+            # Calcula a distância até o objetivo
+            distancia_ate_objetivo = abs(objetivo - posicao_inicial[0])
 
-        # # Encontra a posição inicial do jogador
-        # posicao_inicial = self.encontrar_posicao(self.turno_mm, estado)
+            # Inicializa a pontuação
+            pontuacao = 0
 
-        # # Calcula a distância até o objetivo
-        # distancia_ate_objetivo = abs(objetivo - posicao_inicial[0])
+            # Nas primeiras jogadas, priorize o movimento em direção ao objetivo
+            if distancia_ate_objetivo > 12:  # Considera que o jogo está no início
+                pontuacao -= (16 - distancia_ate_objetivo)
 
-        # # Inicializa a pontuação
-        # pontuacao = 0
+            # Evite colocar barreiras inicialmente
+            if self.qtd_paredes(turno)> 8:  # Se o self.turno_mm ainda tem muitas barreiras
+                pontuacao += 1  # Penaliza a colocação de barreiras
 
-        # # Nas primeiras jogadas, priorize o movimento em direção ao objetivo
-        # if distancia_ate_objetivo > 12:  # Considera que o jogo está no início
-        #     pontuacao += (16 - distancia_ate_objetivo)
+            # Se o adversário estiver próximo do objetivo, considere bloquear seu caminho
+            posicao_adversario = self.encontrar_posicao("P", estado)
+            distancia_adversario_ate_objetivo = abs(objetivo - posicao_adversario[0])
+            if distancia_adversario_ate_objetivo <= 4:
+                pontuacao -= 5  # Incentiva a colocação de barreiras para bloquear o adversário
+            #return 10 * (abs(self.encontrar_posicao("A", estado)[0] - 16))
 
-        # # Evite colocar barreiras inicialmente
-        # if self.qtd_paredes(self.turno_mm)> 8:  # Se o self.turno_mm ainda tem muitas barreiras
-        #     pontuacao -= 1  # Penaliza a colocação de barreiras
-
-        # # Se o adversário estiver próximo do objetivo, considere bloquear seu caminho
-        # posicao_adversario = self.encontrar_posicao("P", estado)
-        # distancia_adversario_ate_objetivo = abs(objetivo - posicao_adversario[0])
-        # if distancia_adversario_ate_objetivo <= 4:
-        #     pontuacao += 5  # Incentiva a colocação de barreiras para bloquear o adversário
-
-        # # Retorna a pontuação avaliada
-        # return pontuacao
+        # Retorna a pontuação avaliada
+        return pontuacao
 
     def caminho_livre(self, posicao1, posicao2, tabuleiro):
         linha1, coluna1 = posicao1
@@ -548,10 +574,10 @@ while(True):
         else:
             print("Selecione uma jogada valida: ")
 
-        if jogo.is_end():
-            break
+    if jogo.is_end():
+        break
 
-        print("")
+    print("")
 
-print("Jogador", jogo.turno, "venceu")
+print("Jogador", jogo.get_winner(), "venceu")
 
