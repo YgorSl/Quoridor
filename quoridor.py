@@ -111,6 +111,23 @@ class Quoridor:
         self.reduzir_parede()
         self.turno = self.oposto(self.turno)
         return self.tabuleiro
+    
+    # def reward(self):
+    #     if self.turno == "A":
+    #         #tabuleiro pontos para A
+    #     elif self.turno  == "P":
+    #         #TABULERIRO PONTOS PARA P
+        
+    def game_end(self):
+        pos_p1 = self.encontrar_posicao("A", self.tabuleiro)
+        pos_p2 = self.encontrar_posicao("P", self.tabuleiro)
+        if self.turno == "P" and pos_p1[0] == 0:
+            return True
+
+        elif self.turno == "A" and pos_p2[0] == 16:
+            return True
+        
+        else: return False
 
 
     def is_end(self):
@@ -143,27 +160,6 @@ class Quoridor:
                 print(celula, end=" ")
             print()
         print()
-
-    # def mover_peca(tabuleiro, posicao_atual, movimento, jogador):
-    #     # Calcula a nova posição baseada no movimento
-    #     direcoes = {'C': (-2, 0), 'B': (2, 0), 'E': (0, -2), 'D': (0, 2)}
-    #     delta = direcoes[movimento]
-    #     nova_posicao = (posicao_atual[0] + delta[0], posicao_atual[1] + delta[1])
-        
-    #     # Verifica se a nova posição é válida
-    #     if not (0 <= nova_posicao[0] < 17 and 0 <= nova_posicao[1] < 17):
-    #         return False, "Movimento inválido: fora do tabuleiro."
-        
-    #     # Verifica se há uma barreira no caminho
-    #     posicao_barreira = (posicao_atual[0] + delta[0]//2, posicao_atual[1] + delta[1]//2)
-    #     if tabuleiro[posicao_barreira[0]][posicao_barreira[1]] in ('-', '|'):
-    #         return False, "Movimento inválido: há uma barreira no caminho."
-        
-    #     # Move a peça
-    #     tabuleiro[posicao_atual[0]][posicao_atual[1]] = '.'
-    #     tabuleiro[nova_posicao[0]][nova_posicao[1]] = jogador  # ou 'A', dependendo do jogador
-        
-    #     return True, nova_posicao
 
     def mover_peca(self, posicao_atual, movimento):
         # Mapeia os movimentos para as mudanças correspondentes no índice do tabuleiro
@@ -361,28 +357,6 @@ class Quoridor:
             # Ação desconhecida (trate conforme necessário)
             return jogo.tabuleiro
         
-    # def avaliar_estado(self, tabuuleiro):
-
-    #     minha_posicao = self.encontrar_posicao('A', tabuuleiro)  # Peça da IA
-    #     objetivo_linha = 0  # Linha oposta (objetivo)
-    #     distancia_ate_objetivo = objetivo_linha - minha_posicao[0]
-
-    #     # Verifique a posição do jogador
-    #     posicao_jogador = self.encontrar_posicao('P', tabuuleiro)  # Peça do jogador
-    #     distancia_jogador_ate_objetivo = objetivo_linha - posicao_jogador[0]
-
-    #     # Pontuação: quanto menor a distância da IA até o objetivo, melhor
-    #     pontuacao = 10 - distancia_ate_objetivo
-
-    #     # Bloqueie o jogador se ele estiver próximo do objetivo
-    #     if distancia_jogador_ate_objetivo <= 5:
-    #         pontuacao += 5
-
-    #     # Penalize se houver paredes no caminho direto da IA
-    #     if not self.caminho_livre(minha_posicao, posicao_jogador, tabuuleiro):
-    #         pontuacao -= 3
-
-    #     return pontuacao
     def caminho_livre(self, posicao1, posicao2, tabuleiro):
         linha1, coluna1 = posicao1
         linha2, coluna2 = posicao2

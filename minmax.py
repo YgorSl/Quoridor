@@ -28,7 +28,7 @@ def acoes_possiveis(jogo:Quoridor):
 
     # Verifique as posições para adicionar barreiras
     posicao_jogador = jogo.encontrar_posicao(jogo.turno, jogo.tabuleiro)  # Peça do jogador
-
+    posicao_oponente = jogo.encontrar_posicao(jogo.oposto(jogo.turno), jogo.tabuleiro)
     if jogo.turno == "P":  
         distancia_jogador_ate_objetivo = posicao_jogador[0]
     else:
@@ -38,18 +38,18 @@ def acoes_possiveis(jogo:Quoridor):
 
 
     #So começa a tentar colocar barreira se for menor = 5 a distancia do oponente
-    if distancia_jogador_ate_objetivo <= 10:
-            for linha in range(posicao_jogador[0] - 1,  posicao_jogador[0] + 1):
-                for coluna in range( posicao_jogador[1] - 1, posicao_jogador[1] + 1):
-                    if jogo.tabuleiro[linha][coluna] == ' ':
-                        # Verifique se é possível adicionar uma barreira horizontal
-                        if jogo.verifica_parede(linha, coluna, 'H', jogo.tabuleiro, jogo.turno):
-                            prox = copy(jogo)
-                            acoes.append((prox, "P", (linha, coluna, 'H')))  # Ação de adicionar barreira horizontal
-                        # Verifique se é possível adicionar uma barreira vertical
-                        if jogo.verifica_parede(linha, coluna, 'V', jogo.tabuleiro, jogo.turno):
-                            prox = copy(jogo)
-                            acoes.append((prox, "P", (linha, coluna, 'V')))  # Ação de adicionar barreira vertical
+    #if distancia_jogador_ate_objetivo <= 10:
+    for linha in range(posicao_jogador[0] - 1,  posicao_jogador[0] + 1):
+        for coluna in range( posicao_jogador[1] - 1, posicao_jogador[1] + 1):
+            if jogo.tabuleiro[linha][coluna] == ' ':
+                # Verifique se é possível adicionar uma barreira horizontal
+                if jogo.verifica_parede(linha, coluna, 'H', jogo.tabuleiro, jogo.turno):
+                    prox = copy(jogo)
+                    acoes.append((prox, "P", (linha, coluna, 'H')))  # Ação de adicionar barreira horizontal
+                # Verifique se é possível adicionar uma barreira vertical
+                if jogo.verifica_parede(linha, coluna, 'V', jogo.tabuleiro, jogo.turno):
+                    prox = copy(jogo)
+                    acoes.append((prox, "P", (linha, coluna, 'V')))  # Ação de adicionar barreira vertical
 
     return acoes
 
@@ -118,9 +118,11 @@ def avaliar_estado(jogo : Quoridor):
         return result
         
 def minimax(jogo : Quoridor ,turno, profundidade, alfa, beta, maximizando):
-    if profundidade == 0 or jogo.is_end():
+    if profundidade == 0:
         return avaliar_estado(jogo)
 
+    # if jogo.is_end():
+    #     return avaliar_estado(jogo)
     if maximizando:
         melhor_valor = float("-inf")
         for acao in acoes_possiveis(jogo): #AS AÇÕES POSSIVEIS TAO LEVANDO O OBJETO JOGO QUE TEM COMO TURNO O A
@@ -155,7 +157,7 @@ def melhor_jogada(jogo : Quoridor):
         #pontuacao = jogo.avaliar_estado(novo_estado)
         
         # Chame o Minimax para avaliar os estados sucessores
-        pontuacao = minimax(acao[0],jogo.oposto(turno), profundidade=3, alfa=float("-inf"), beta=float("inf"),maximizando=False)
+        pontuacao = minimax(acao[0],jogo.oposto(turno), profundidade=3, alfa=float("-inf"), beta=float("inf"),maximizando=True)
         if pontuacao > melhor_pontuacao:
             melhor_pontuacao = pontuacao
             melhor_acao = acao
