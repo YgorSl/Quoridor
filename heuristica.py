@@ -2,8 +2,8 @@ from astar import astar
 from quoridor import encontrar_posicao, qtd_paredes
 
 def heuristica(game_state, player_one_maximizer):
-    player_one_pos = encontrar_posicao("P",game_state)
-    player_two_pos = encontrar_posicao("A",game_state)
+    player_one_pos = encontrar_posicao("P")
+    player_two_pos = encontrar_posicao("A")
 
     player_one_distance = player_one_pos[0] // 2
     player_two_distance = (16 - player_two_pos[0]) // 2

@@ -2,6 +2,7 @@ import numpy as np
 from collections import deque
 from copy import copy
 
+
 class Quoridor:
 
     def __init__(self):        
@@ -11,14 +12,13 @@ class Quoridor:
         self.paredes_p=10
         self.paredes_a=10
         self.turno_mm = None
-        self.itercao =0
 
     def existe_caminho(self, tabuleiro, jogador):
         # Define o objetivo final para cada jogador
         objetivo = 16 if jogador == "P" else 0
 
         # Encontra a posição inicial do jogador
-        posicao_inicial = self.encontrar_posicao(jogador, tabuleiro)
+        posicao_inicial = self.encontrar_posicao(jogador)
 
         # Cria uma fila para armazenar os caminhos a serem explorados
         fila = deque([posicao_inicial])
@@ -51,6 +51,7 @@ class Quoridor:
 
         # Se não encontrar um caminho até o objetivo, retorna False
         return False
+    
     def reduzir_parede(self):
 
         if self.turno == "P":
@@ -119,28 +120,28 @@ class Quoridor:
     #         #TABULERIRO PONTOS PARA P
         
     def game_end(self):
-        pos_p1 = self.encontrar_posicao("A", self.tabuleiro)
-        pos_p2 = self.encontrar_posicao("P", self.tabuleiro)
-        if self.turno == "P" and pos_p1[0] == 0:
+        pos_p1 = self.encontrar_posicao("P")
+        pos_p2 = self.encontrar_posicao("A")
+        if pos_p1[0] == 0:
             return True
 
-        elif self.turno == "A" and pos_p2[0] == 16:
+        elif pos_p2[0] == 16:
             return True
         
         else: return False
 
 
     def is_end(self):
-        pos_p1 = self.encontrar_posicao("P", self.tabuleiro)
-        pos_p2 = self.encontrar_posicao("A", self.tabuleiro)
+        pos_p1 = self.encontrar_posicao("P")
+        pos_p2 = self.encontrar_posicao("A")
         if self.turno == "A":
             return pos_p1[0] == 0
     
         else:
             return pos_p2[0] == 16
         
-    def get_winner(self, tabuleiro):
-        if self.encontrar_posicao("A", tabuleiro)[0] == 16:
+    def get_winner(self):
+        if self.encontrar_posicao("A")[0] == 16:
             return "A"
         else:
             return "P"
@@ -244,14 +245,22 @@ class Quoridor:
         # Verifica se ainda há caminho para o jogador P2
         if not self.existe_caminho(tabuleiro_simulado, "A"):
             return False
+        
+        if not self.is_wall_blocking():
+            return False
 
 
         # Se passar por todas as verificações, a posição é válida
         return True
+    
+    def is_wall_blocking(self):
+        from astar import astar
+        #self.turno = self.oposto(self.turno)
+        return not astar(self, True)
 
-    def encontrar_posicao(self, jogador, tabuleiro):
+    def encontrar_posicao(self, jogador):
         # Converte o tabuleiro para um array NumPy
-        tabuleiro_np = np.array(tabuleiro)
+        tabuleiro_np = np.array(self.tabuleiro)
         
         # Usa np.where para encontrar a posição do jogador
         posicao = np.where(tabuleiro_np == jogador)
@@ -263,26 +272,27 @@ class Quoridor:
         return self.turno
     
     def avalia_mov(self):
-        available_moves = self.mov_possiveis(False)
+        available_moves = self.mov_possiveis()
         children = []
         for move in available_moves:
             child = copy(self)
-            child. tabuleiro = child.aplicar_acao(move)
+            #fazer o objeto alterar si mesmo
+            child.tabuleiro = child.aplicar_acao(move, child.turno)
             cost = 1000
             if child.turno == "P":
-                pos = child.player_one_pos
+                pos = child.encontrar_posicao("P")
             else:
-                pos = child.player_two_pos
-            simplified_child_state = ((pos[0], pos[1]), (move[0], move[1]), cost)
+                pos = child.encontrar_posicao("A")
+            simplified_child_state = ((pos[0], pos[1]), (move[2][1], move[2][2]), cost)
 
             children.append((child, simplified_child_state))
         return children
 
-    def mov_possiveis(self, estado, turno):
+    def mov_possiveis(self):
         acoes = []
 
-        # Encontre a posição atual do jogador
-        posicao_atual = self.encontrar_posicao(turno, estado)
+        # Encontre a posição atual do jogador########################################
+        posicao_atual = self.encontrar_posicao(self.turno)
 
         direcoes = {'C': (-2, 0), 'B': (2, 0), 'E': (0, -2), 'D': (0, 2)}
         #delta = direcoes[movimento]
@@ -298,9 +308,9 @@ class Quoridor:
             if (0 <= nova_posicao[0] < 17 and 0 <= nova_posicao[1] < 17):
                 # Verifique se não há barreira no caminho
                 if self.tabuleiro[posicao_intermediaria[0]][posicao_intermediaria[1]] not in ('-', '|'):
-                    acoes.append(("M", (direcao, nova_linha, nova_coluna)))  # Ação de mover
-        return acoes
-
+                    prox = copy(self)
+                    acoes.append((prox, "M", (direcao, nova_linha, nova_coluna)))  # Ação de mover
+        return acoes   
 
     def aplicar_acao(self, acao, turno):
         jogo, tipo_acao, parametros = acao
@@ -308,10 +318,8 @@ class Quoridor:
         if tipo_acao == "M":
             # Ação de mover
 
-            posicao_atual = self.encontrar_posicao(turno, jogo.tabuleiro)
+            posicao_atual = self.encontrar_posicao(turno)
             direcao, nova_linha, nova_coluna = parametros
-
-        
 
             novo_estado = [linha[:] for linha in jogo.tabuleiro]  # Crie uma cópia do estado atual
 
@@ -346,9 +354,11 @@ class Quoridor:
                 if orientacao == 'H':
                     for offset in range(-1, 2):
                         novo_estado[linha][coluna + offset] = '-'
+                        self.reduzir_parede()
                 elif orientacao == 'V':
                     for offset in range(-1, 2):
                         novo_estado[linha + offset][coluna] = '|'
+                        self.reduzir_parede()
                 return novo_estado
             else:
                 # A posição não é válida para adicionar uma barreira

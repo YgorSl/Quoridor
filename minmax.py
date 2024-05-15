@@ -6,7 +6,7 @@ def acoes_possiveis(jogo:Quoridor):
     acoes = []
 
     # Encontre a posição atual do jogador
-    posicao_atual = jogo.encontrar_posicao(jogo.turno, jogo.tabuleiro)
+    posicao_atual = jogo.encontrar_posicao(jogo.turno)
 
     direcoes = {'C': (-2, 0), 'B': (2, 0), 'E': (0, -2), 'D': (0, 2)}
     #delta = direcoes[movimento]
@@ -27,8 +27,8 @@ def acoes_possiveis(jogo:Quoridor):
                 acoes.append((prox, "M", (direcao, nova_linha, nova_coluna)))  # Ação de mover
 
     # Verifique as posições para adicionar barreiras
-    posicao_jogador = jogo.encontrar_posicao(jogo.turno, jogo.tabuleiro)  # Peça do jogador
-    posicao_oponente = jogo.encontrar_posicao(jogo.oposto(jogo.turno), jogo.tabuleiro)
+    posicao_jogador = jogo.encontrar_posicao(jogo.turno)  # Peça do jogador
+    posicao_oponente = jogo.encontrar_posicao(jogo.oposto(jogo.turno))
     if jogo.turno == "P":  
         distancia_jogador_ate_objetivo = posicao_jogador[0]
     else:
@@ -39,8 +39,8 @@ def acoes_possiveis(jogo:Quoridor):
 
     #So começa a tentar colocar barreira se for menor = 5 a distancia do oponente
     #if distancia_jogador_ate_objetivo <= 10:
-    for linha in range(posicao_jogador[0] - 1,  posicao_jogador[0] + 1):
-        for coluna in range( posicao_jogador[1] - 1, posicao_jogador[1] + 1):
+    for linha in range(posicao_oponente[0] - 1,  posicao_oponente[0] + 1):
+        for coluna in range( posicao_oponente[1] - 1, posicao_oponente[1] + 1):
             if jogo.tabuleiro[linha][coluna] == ' ':
                 # Verifique se é possível adicionar uma barreira horizontal
                 if jogo.verifica_parede(linha, coluna, 'H', jogo.tabuleiro, jogo.turno):
@@ -54,8 +54,8 @@ def acoes_possiveis(jogo:Quoridor):
     return acoes
 
 def avaliar_estado(jogo : Quoridor):
-    player_one_pos = jogo.encontrar_posicao("P",jogo.tabuleiro)
-    player_two_pos = jogo.encontrar_posicao("A",jogo.tabuleiro)
+    player_one_pos = jogo.encontrar_posicao("P")
+    player_two_pos = jogo.encontrar_posicao("A")
 
     player_one_distance = player_one_pos[0] // 2
     player_two_distance = (16 - player_two_pos[0]) // 2
@@ -66,8 +66,8 @@ def avaliar_estado(jogo : Quoridor):
         opponent_path_len, player_path_len = player_two_distance, player_one_distance
         if jogo.qtd_paredes("P") != 10 and jogo.qtd_paredes("A") != 10:
             previous = jogo.turno
-            jogo.turno = jogo.oposto()
-            player_path_len = astar(jogo,player_one_pos,player_two_pos, False)
+            jogo.turno = jogo.oposto(jogo.turno)
+            player_path_len = astar(jogo, False)
             jogo.turno = previous
 
         result += opponent_path_len
@@ -83,9 +83,9 @@ def avaliar_estado(jogo : Quoridor):
         result -= round(50 / num_1, 2)
 
         result += (jogo.paredes_p - jogo.paredes_a)
-        if jogo.encontrar_posicao("P",jogo.tabuleiro)[0] == 0:
+        if jogo.encontrar_posicao("P")[0] == 0:
             result += 100
-        if player_path_len == 0 and jogo.encontrar_posicao("P",jogo.tabuleiro)[0] != 0:
+        if player_path_len == 0 and jogo.encontrar_posicao("P")[0] != 0:
             result -= 500
         return result
 
@@ -93,8 +93,8 @@ def avaliar_estado(jogo : Quoridor):
         opponent_path_len, player_path_len = player_one_distance, player_two_distance
         if jogo.qtd_paredes("P") != 10 and jogo.qtd_paredes("A") != 10:
             previous = jogo.turno
-            jogo.turno = jogo.oposto()
-            player_path_len = astar(jogo,player_one_pos,player_two_pos, False)
+            jogo.turno = jogo.oposto(jogo.turno)
+            player_path_len = astar(jogo, False)
             jogo.turno = previous
         
         result += opponent_path_len
@@ -111,9 +111,9 @@ def avaliar_estado(jogo : Quoridor):
         result -= round(50 / num_1, 2)
 
         result += (jogo.paredes_a - jogo.paredes_p)
-        if jogo.encontrar_posicao("A",jogo.tabuleiro)[0] == 16:
+        if jogo.encontrar_posicao("A")[0] == 16:
             result += 100
-        if player_path_len == 0 and jogo.encontrar_posicao("A",jogo.tabuleiro)[0] != 16:
+        if player_path_len == 0 and jogo.encontrar_posicao("A")[0] != 16:
             result -= 500
         return result
         

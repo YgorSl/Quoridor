@@ -1,6 +1,6 @@
 from copy import copy
-import minmax
 from quoridor import Quoridor
+import minmax
     
 jogo = Quoridor()
 jogo.imprimir_tabuleiro()
@@ -16,7 +16,7 @@ while(True):
         jogo_prox = copy(jogo)
         proxima_jogada = minmax.melhor_jogada(jogo_prox)  # Chame a função da IA para obter a próxima jogada
         game, tipo_acao, parametros = proxima_jogada
-        posicao_da_vez = jogo.encontrar_posicao(jogo.turno, jogo.tabuleiro)
+        posicao_da_vez = jogo.encontrar_posicao(jogo.turno)
 
         if tipo_acao == "M":
             sucesso, resultado = jogo.mover_peca(posicao_da_vez, parametros[0])  # Aplicação do movimento
@@ -29,7 +29,7 @@ while(True):
             # Alterne o turno para o jogador (P1)
             #jogo.turno = "P"
     else:
-        posicao_da_vez = jogo.encontrar_posicao(jogo.turno, jogo.tabuleiro)
+        posicao_da_vez = jogo.encontrar_posicao(jogo.turno)
         print("Jogador:", jogo.turn())
         jogada = input("Escolha: Mover(M), ou Parede(P): ")
         if(jogada == "M"):

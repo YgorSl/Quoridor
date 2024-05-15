@@ -2,10 +2,10 @@ from copy import copy
 from heuristica_simples import heuristica_simples
 from fila import PriorityQueueItem
 from queue import PriorityQueue
-from quoridor import Quoridor
 
 
-def astar(jogo : Quoridor, check_blockage, heuristic=heuristica_simples):
+
+def astar(jogo , check_blockage, heuristic=heuristica_simples):
     visited = set()
 
     def cost_function(path):
@@ -19,9 +19,9 @@ def astar(jogo : Quoridor, check_blockage, heuristic=heuristica_simples):
 
     queue = PriorityQueue()
     if jogo.turno == "P":
-        pos = jogo.turno
+        pos = jogo.encontrar_posicao("P")
     else:
-        pos = jogo.turno
+        pos = jogo.encontrar_posicao("A")
 
     queue.put(PriorityQueueItem(0, [(jogo, ((pos[0], pos[1]), (0, 0), 0))]))
 
@@ -30,7 +30,7 @@ def astar(jogo : Quoridor, check_blockage, heuristic=heuristica_simples):
         path = item.item
         current_state = path[-1][0]
         current_simplified_state = path[-1][1]
-        if current_state.is_end():
+        if current_state.game_end():
             if check_blockage:
                 return True
             final_path = []
