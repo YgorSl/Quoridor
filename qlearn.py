@@ -1,5 +1,7 @@
 import numpy as np
 import random
+from copy import copy
+import minmax
 
 # Now we can define the MDP as a tuple (S, A, T, R, 𝛾).
   # Here, R(s, a) is the reward for taking action a in state s, P(s'|s, a) is the transition probability of reaching state s' given state s and action a, and 𝛾 is the discount factor.
@@ -12,7 +14,7 @@ class Qlearning:
     alpha = 0.1
   ):
     self.problema = problema
-    self.n_estados = len(problema.estados)
+    self.n_estados = len(problema.tabuleiro)
     self.n_acoes = len(problema.acoes)
     self.theta = tetha
     self.alpha = alpha
@@ -28,9 +30,12 @@ class Qlearning:
     while passo < n_passos:
       if (passo % 10000 == 0): print("%s passos de %s" %(passo, n_passos))
       passo += 1
-      estado = estado_inicial # estado inicial
+      novo_problema = copy(self.problema)#estado é a posição
+      # o meu tem que ser o tabuleiro
+      #estado = estado_inicial # estado inicial
+      estado = self.problema.tabuleiro
       limite = 0
-      while self.problema.estado_final(estado) == False and limite < limite_max:
+      while self.problema.is_end() == False and limite < limite_max:
         limite += 1
         # escolha da acao
         # random ou melhor da política baseado em uma taxa
@@ -55,7 +60,16 @@ class Qlearning:
         
         # escolhe o proximo estado probabilisticamente
         estado = self.sorteia_proximo_estado(estado, acao)
+        jogo_prox = copy(self.problema)
+        jogo_prox.tabuleiro = estado
+        proxima_jogada = minmax.melhor_jogada(jogo_prox)
+        self.problema.aplicar_acao(proxima_jogada, "A")
+        estado = self.problema.tabuleiro
+        
+      self.problema = novo_problema
 
+
+#se eu alterar num novo problema as funções q e T estarão calculando do problema da classe
     return self.Q, self.PI
 
   def novo_q(self, estado, acao, proximo_estado, probabilidade):

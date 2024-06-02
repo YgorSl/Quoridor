@@ -1,59 +1,8 @@
-from quoridor import Quoridor
+
 from copy import copy
 from astar import astar
 
-def acoes_possiveis(jogo:Quoridor):
-    acoes = []
-
-    # Encontre a posição atual do jogador
-    posicao_atual = jogo.encontrar_posicao(jogo.turno)
-
-    direcoes = {'C': (-2, 0), 'B': (2, 0), 'E': (0, -2), 'D': (0, 2)}
-    #delta = direcoes[movimento]
-    for direcao in direcoes:
-
-        delta = direcoes[direcao]
-
-        nova_linha, nova_coluna = (posicao_atual[0] + delta[0], posicao_atual[1] + delta[1])
-        posicao_intermediaria = (posicao_atual[0] + delta[0]//2, posicao_atual[1] + delta[1]//2)
-        nova_posicao = (posicao_atual[0] + delta[0], posicao_atual[1] + delta[1])
-
-        # Verifique se a nova posição é válida
-        if (0 <= nova_posicao[0] < 17 and 0 <= nova_posicao[1] < 17):
-            # Verifique se não há barreira no caminho
-            
-            if jogo.tabuleiro[posicao_intermediaria[0]][posicao_intermediaria[1]] not in ('-', '|'):
-                prox = copy(jogo)
-                acoes.append((prox, "M", (direcao, nova_linha, nova_coluna)))  # Ação de mover
-
-    # Verifique as posições para adicionar barreiras
-    posicao_jogador = jogo.encontrar_posicao(jogo.turno)  # Peça do jogador
-    posicao_oponente = jogo.encontrar_posicao(jogo.oposto(jogo.turno))
-    if jogo.turno == "P":  
-        distancia_jogador_ate_objetivo = posicao_jogador[0]
-    else:
-        distancia_jogador_ate_objetivo = 16 - posicao_jogador[0]
-
-    # Pontuação: quanto menor a distância da IA até o objetivo, melhor
-
-
-    #So começa a tentar colocar barreira se for menor = 5 a distancia do oponente
-    #if distancia_jogador_ate_objetivo <= 10:
-    for linha in range(posicao_oponente[0] - 1,  posicao_oponente[0] + 1):
-        for coluna in range( posicao_oponente[1] - 1, posicao_oponente[1] + 1):
-            if jogo.tabuleiro[linha][coluna] == ' ':
-                # Verifique se é possível adicionar uma barreira horizontal
-                if jogo.verifica_parede(linha, coluna, 'H', jogo.tabuleiro, jogo.turno):
-                    prox = copy(jogo)
-                    acoes.append((prox, "P", (linha, coluna, 'H')))  # Ação de adicionar barreira horizontal
-                # Verifique se é possível adicionar uma barreira vertical
-                if jogo.verifica_parede(linha, coluna, 'V', jogo.tabuleiro, jogo.turno):
-                    prox = copy(jogo)
-                    acoes.append((prox, "P", (linha, coluna, 'V')))  # Ação de adicionar barreira vertical
-
-    return acoes
-
-def avaliar_estado(jogo : Quoridor):
+def avaliar_estado(jogo ):
     player_one_pos = jogo.encontrar_posicao("P")
     player_two_pos = jogo.encontrar_posicao("A")
 
@@ -117,7 +66,7 @@ def avaliar_estado(jogo : Quoridor):
             result -= 500
         return result
         
-def minimax(jogo : Quoridor ,turno, profundidade, alfa, beta, maximizando):
+def minimax(jogo,turno, profundidade, alfa, beta, maximizando):
     if profundidade == 0:
         return avaliar_estado(jogo)
 
@@ -125,7 +74,7 @@ def minimax(jogo : Quoridor ,turno, profundidade, alfa, beta, maximizando):
     #     return avaliar_estado(jogo)
     if maximizando:
         melhor_valor = float("-inf")
-        for acao in acoes_possiveis(jogo): #AS AÇÕES POSSIVEIS TAO LEVANDO O OBJETO JOGO QUE TEM COMO TURNO O A
+        for acao in jogo.acoes_possiveis(): #AS AÇÕES POSSIVEIS TAO LEVANDO O OBJETO JOGO QUE TEM COMO TURNO O A
             acao[0].tabuleiro = acao[0].aplicar_acao(acao, turno)
             acao[0].turno = jogo.oposto(turno)
             valor = minimax(acao[0],acao[0].turno, profundidade - 1, alfa, beta, False)
@@ -136,7 +85,7 @@ def minimax(jogo : Quoridor ,turno, profundidade, alfa, beta, maximizando):
         return melhor_valor
     else:
         melhor_valor = float("inf")
-        for acao in acoes_possiveis(jogo):
+        for acao in jogo.acoes_possiveis():
             acao[0].tabuleiro = acao[0].aplicar_acao(acao, turno)
             acao[0].turno = jogo.oposto(turno)
             valor = minimax(acao[0],acao[0].turno, profundidade - 1, alfa, beta, True)
@@ -146,11 +95,11 @@ def minimax(jogo : Quoridor ,turno, profundidade, alfa, beta, maximizando):
                 break  # Poda alfa-beta
         return melhor_valor
 
-def melhor_jogada(jogo : Quoridor):
+def melhor_jogada(jogo):
     melhor_pontuacao = float("-inf")
     melhor_acao = None
     turno = jogo.turno
-    for acao in acoes_possiveis(jogo):
+    for acao in jogo.acoes_possiveis():
         acao[0].tabuleiro = jogo.aplicar_acao(acao, turno)
     
         # Avalie o estado usando a heurística
