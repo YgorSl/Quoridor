@@ -77,7 +77,12 @@ class Quoridor:
     
     def calculate_distance_to_goal(self, state, player_turn):
         tabuleiro = self.tabuleiro
-        player_position = state['player_positions'][player_turn]
+
+        if player_turn == 1:
+            player_position = self.encontrar_posicao("P")
+        else:
+            player_position = self.encontrar_posicao("A")
+        # player_position = state['player_positions'][player_turn]
 
         objetivo = 0 if player_turn == 1 else 16
 
@@ -158,7 +163,7 @@ class Quoridor:
                 # Verifique se não há barreira no caminho
                 
                 if self.tabuleiro[posicao_intermediaria[0]][posicao_intermediaria[1]] not in ('-', '|'):
-                    prox = copy.copy(self)
+                    prox = copy.deepcopy(self)
                     acoes.append((prox, "M", (direcao, nova_linha, nova_coluna)))  # Ação de mover
 
         # Verifique as posições para adicionar barreiras
@@ -176,11 +181,11 @@ class Quoridor:
                 if self.tabuleiro[linha][coluna] == ' ':
                     # Verifique se é possível adicionar uma barreira horizontal
                     if self.verifica_parede(linha, coluna, 'H', self.tabuleiro, self.turno):
-                        prox = copy.copy(self)
+                        prox = copy.deepcopy(self)
                         acoes.append((prox, "P", (linha, coluna, 'H')))  # Ação de adicionar barreira horizontal
                     # Verifique se é possível adicionar uma barreira vertical
                     if self.verifica_parede(linha, coluna, 'V', self.tabuleiro, self.turno):
-                        prox = copy.copy(self)
+                        prox = copy.deepcopy(self)
                         acoes.append((prox, "P", (linha, coluna, 'V')))  # Ação de adicionar barreira vertical
 
         return acoes
@@ -198,11 +203,9 @@ class Quoridor:
         return self.done
     
     def heuristic_opponent(self, state):
-        player_position = state['player_positions'][0]
-        goal_row = 16
-        valid_moves = self.mov_possiveis()
         acoes = self.acoes_possiveis()
         state_copy = copy.deepcopy(self)
+
         # Escolher o movimento que minimiza a distância até o objetivo
         best_move = None
         min_distance = float('inf')
@@ -211,8 +214,6 @@ class Quoridor:
         for acao in acoes:
             jogo, tipo_acao, parametros = acao
             if tipo_acao == "M":
-            
-            #for move in valid_moves:
                 state_copy.tabuleiro = state_copy.aplicar_acao(acao,"A")
                 distance = state_copy.calculate_distance_to_goal(state_copy.state, 0)
                 if distance < min_distance:
@@ -276,9 +277,9 @@ class Quoridor:
 
         # Recompensa adicional por ganhar o jogo
         if self.is_goal_reached(next_state, 1):
-            reward += 100  # Grande recompensa por alcançar o objetivo
+            reward += 1000  # Grande recompensa por alcançar o objetivo
         if self.is_goal_reached(next_state, 0):
-            reward -= 100  # Grande penalidade por permitir que o adversário alcance o objetivo
+            reward -= 1000  # Grande penalidade por permitir que o adversário alcance o objetivo
 
         return reward
     
@@ -654,4 +655,4 @@ class Quoridor:
 
             print("")
 
-        print("Jogador", self.get_winner(self.tabuleiro), "venceu")
+        print("Jogador", self.get_winner(), "venceu")
