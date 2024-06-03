@@ -1,67 +1,113 @@
-from collections import deque
 
+from copy import copy
+from astar import astar
 
-def minimax_alfabeta(self, jogo, turno_max, jogador, profundidade_maxima=8, alfa=float("-inf"), beta=float("inf")):
-        if jogo.venceu() or jogo.empate() or profundidade_maxima == 0:
-            return jogo.calcular_utilidade(jogador)
+def avaliar_estado(jogo ):
+    player_one_pos = jogo.encontrar_posicao("P")
+    player_two_pos = jogo.encontrar_posicao("A")
 
-        if turno_max:  # turno do MAX
-            for proximo_jogo in jogo.jogos_validos():
-                utilidade = self.minimax_alfabeta(jogo.jogar(proximo_jogo), False, jogador, profundidade_maxima - 1, alfa, beta)
-                alfa = max(utilidade, alfa)
-                if beta <= alfa:
-                    break
-            return alfa
-        else:  # turno no MIN
-            for proximo_jogo in jogo.jogos_validos():
-                utilidade = self.minimax_alfabeta(jogo.jogar(proximo_jogo), True, jogador, profundidade_maxima - 1, alfa, beta)
-                beta = min(utilidade, beta)
-                if beta <= alfa:
-                    break
-            return beta
+    player_one_distance = player_one_pos[0] // 2
+    player_two_distance = (16 - player_two_pos[0]) // 2
+    result = 0
 
-def melhor_jogada_agente_poda(self, profundidade_maxima=8):
-    melhor_valor = float("-inf")
-    melhor_jogada = -1
-    for proximo_jogo in self.jogos_validos():
-        utilidade = self.minimax_alfabeta(self.jogar(proximo_jogo), False, self.turno(), profundidade_maxima)
-        if utilidade > melhor_valor:
-            melhor_valor = utilidade
-            melhor_jogada = proximo_jogo
-    return melhor_jogada
+    if jogo.turno == "P":
 
-def existe_caminho(self, tabuleiro, posicao_inicial, linha_final):
-        # Converte o tabuleiro para um formato que facilite a verificação de barreiras
-        tabuleiro_convertido = [[' ' for _ in range(9)] for _ in range(9)]
-        for i in range(17):
-            for j in range(17):
-                if tabuleiro[i][j] == '.':
-                    tabuleiro_convertido[i // 2][j // 2] = '.'
+        opponent_path_len, player_path_len = player_two_distance, player_one_distance
+        if jogo.qtd_paredes("P") != 10 and jogo.qtd_paredes("A") != 10:
+            previous = jogo.turno
+            jogo.turno = jogo.oposto(jogo.turno)
+            player_path_len = astar(jogo, False)
+            jogo.turno = previous
 
-        # Inicializa a fila para BFS e adiciona a posição inicial
-        fila = deque([posicao_inicial])
-        visitados = set([posicao_inicial])
+        result += opponent_path_len
+        result -= player_one_distance
+        num = 100
+        if player_path_len != 0:
+            num = player_path_len
+        result += round(100 / num, 2)
 
-        # Executa a busca em largura
-        while fila:
-            posicao_atual = fila.popleft()
-            linha, coluna = posicao_atual
+        num_1 = 50
+        if player_two_distance != 0:
+            num_1 = player_two_distance
+        result -= round(50 / num_1, 2)
 
-            # Verifica se alcançou a linha final
-            if linha == linha_final:
-                return True
+        result += (jogo.paredes_p - jogo.paredes_a)
+        if jogo.encontrar_posicao("P")[0] == 0:
+            result += 100
+        if player_path_len == 0 and jogo.encontrar_posicao("P")[0] != 0:
+            result -= 500
+        return result
 
-            # Verifica movimentos possíveis (Cima, Baixo, Esquerda, Direita)
-            for delta_linha, delta_coluna in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                nova_linha = linha + delta_linha
-                nova_coluna = coluna + delta_coluna
+    else:
+        opponent_path_len, player_path_len = player_one_distance, player_two_distance
+        if jogo.qtd_paredes("P") != 10 and jogo.qtd_paredes("A") != 10:
+            previous = jogo.turno
+            jogo.turno = jogo.oposto(jogo.turno)
+            player_path_len = astar(jogo, False)
+            jogo.turno = previous
+        
+        result += opponent_path_len
+        
+        result -= player_two_distance
+        num = 100
+        if player_path_len != 0:
+            num = player_path_len
+        result += round(100 / num, 2)
 
-                # Verifica se a nova posição é válida e não foi visitada
-                if 0 <= nova_linha < 9 and 0 <= nova_coluna < 9 and (nova_linha, nova_coluna) not in visitados:
-                    # Verifica se não há barreira no caminho
-                    if tabuleiro[linha * 2 + delta_linha][coluna * 2 + delta_coluna] == ' ':
-                        fila.append((nova_linha, nova_coluna))
-                        visitados.add((nova_linha, nova_coluna))
+        num_1 = 50
+        if player_one_distance != 0:
+            num_1 = player_one_distance
+        result -= round(50 / num_1, 2)
 
-        # Se a fila esvaziar e a linha final não for alcançada, não há caminho
-        return False
+        result += (jogo.paredes_a - jogo.paredes_p)
+        if jogo.encontrar_posicao("A")[0] == 16:
+            result += 100
+        if player_path_len == 0 and jogo.encontrar_posicao("A")[0] != 16:
+            result -= 500
+        return result
+        
+def minimax(jogo,turno, profundidade, alfa, beta, maximizando):
+    if profundidade == 0:
+        return avaliar_estado(jogo)
+
+    # if jogo.is_end():
+    #     return avaliar_estado(jogo)
+    if maximizando:
+        melhor_valor = float("-inf")
+        for acao in jogo.acoes_possiveis(): #AS AÇÕES POSSIVEIS TAO LEVANDO O OBJETO JOGO QUE TEM COMO TURNO O A
+            acao[0].tabuleiro = acao[0].aplicar_acao(acao, turno)
+            acao[0].turno = jogo.oposto(turno)
+            valor = minimax(acao[0],acao[0].turno, profundidade - 1, alfa, beta, False)
+            melhor_valor = max(melhor_valor, valor)
+            alfa = max(valor, alfa)
+            if beta <= alfa:
+                break  # Poda alfa-beta
+        return melhor_valor
+    else:
+        melhor_valor = float("inf")
+        for acao in jogo.acoes_possiveis():
+            acao[0].tabuleiro = acao[0].aplicar_acao(acao, turno)
+            acao[0].turno = jogo.oposto(turno)
+            valor = minimax(acao[0],acao[0].turno, profundidade - 1, alfa, beta, True)
+            melhor_valor = min(melhor_valor, valor)
+            beta = min(valor, beta)
+            if beta <= alfa:
+                break  # Poda alfa-beta
+        return melhor_valor
+
+def melhor_jogada(jogo):
+    melhor_pontuacao = float("-inf")
+    melhor_acao = None
+    turno = jogo.turno
+    for acao in jogo.acoes_possiveis():
+        acao[0].tabuleiro = jogo.aplicar_acao(acao, turno)
+    
+        # Avalie o estado usando a heurística
+        #pontuacao = jogo.avaliar_estado(novo_estado)
+        
+        # Chame o Minimax para avaliar os estados sucessores
+        pontuacao = minimax(acao[0],jogo.oposto(turno), profundidade=3, alfa=float("-inf"), beta=float("inf"),maximizando=True)
+        if pontuacao > melhor_pontuacao:
+            melhor_pontuacao = pontuacao
+            melhor_acao = acao
+    return melhor_acao
