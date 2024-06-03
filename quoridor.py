@@ -2,6 +2,7 @@ import numpy as np
 from collections import deque
 import copy
 import minmax
+import random
 
 
 class Quoridor:
@@ -46,6 +47,7 @@ class Quoridor:
 
         # Cria um conjunto para armazenar as posições já visitadas
         visitados = set()
+        visitados.add(posicao_inicial)
 
         # Realiza uma busca em largura (BFS) para encontrar um caminho até o objetivo
         while fila:
@@ -56,9 +58,6 @@ class Quoridor:
             if linha_atual == objetivo:
                 return True
 
-            # Adiciona a posição atual aos visitados
-            visitados.add(posicao_atual)
-
             # Explora as posições adjacentes
             for delta_linha, delta_coluna in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
                 nova_linha = linha_atual + delta_linha
@@ -67,10 +66,13 @@ class Quoridor:
                 # Verifica se a nova posição é válida e não foi visitada
                 if 0 <= nova_linha < 17 and 0 <= nova_coluna < 17 and (nova_linha, nova_coluna) not in visitados:
                     # Verifica se não há barreira no caminho
-                    if tabuleiro[linha_atual + delta_linha // 2][coluna_atual + delta_coluna // 2] not in ['-', '|']:
+                    meio_linha = linha_atual + delta_linha // 2
+                    meio_coluna = coluna_atual + delta_coluna // 2
+                    if tabuleiro[meio_linha][meio_coluna] not in ['-', '|']:
+                        visitados.add((nova_linha, nova_coluna))
                         fila.append((nova_linha, nova_coluna))
 
-        # Se não encontrar um caminho até o objetivo, retorna False
+        # Se o loop terminar sem encontrar o objetivo, retorna False
         return False
     
     def calculate_distance_to_goal(self, state, player_turn):
@@ -199,18 +201,38 @@ class Quoridor:
         player_position = state['player_positions'][0]
         goal_row = 16
         valid_moves = self.mov_possiveis()
+        acoes = self.acoes_possiveis()
         state_copy = copy.deepcopy(self)
         # Escolher o movimento que minimiza a distância até o objetivo
         best_move = None
         min_distance = float('inf')
-          
-        for move in valid_moves:
-            state_copy.tabuleiro = state_copy.aplicar_acao(move,"A")
-            distance = state_copy.calculate_distance_to_goal(state_copy.state, 0)
-            if distance < min_distance:
-                min_distance = distance
-                best_move = move
-            state_copy = copy.deepcopy(self)
+        max_distance = 0
+        best_parede = None
+        for acao in acoes:
+            jogo, tipo_acao, parametros = acao
+            if tipo_acao == "M":
+            
+            #for move in valid_moves:
+                state_copy.tabuleiro = state_copy.aplicar_acao(acao,"A")
+                distance = state_copy.calculate_distance_to_goal(state_copy.state, 0)
+                if distance < min_distance:
+                    min_distance = distance
+                    best_move = acao
+                state_copy = copy.deepcopy(self)
+            elif tipo_acao == "P":
+                state_copy.tabuleiro = state_copy.aplicar_acao(acao,"A")
+                distance_enemy = state_copy.calculate_distance_to_goal(state_copy.state, 1)
+                if distance_enemy > max_distance:
+                    max_distance = distance_enemy
+                    best_parede = acao
+                state_copy = copy.deepcopy(self)
+
+        acao_escolhida = random.randint(0,1)
+        if acao_escolhida == 0:
+            best_move = best_move
+        elif acao_escolhida == 1 and best_parede != None:
+            best_move = best_parede
+
         
         return best_move
 
@@ -264,72 +286,7 @@ class Quoridor:
         player_position = state['player_positions'][player_turn]
         goal_row = 16 if player_turn == 0 else 0
         return player_position[1] == goal_row
-        
-    def T(self, estado, acao):
-    # se está em um buraco ou final, fica lá
-        
-        if self.encontrar_posicao("A")[0] == 16 or self.encontrar_posicao("P")[0] == 0:
-            return [(estado, 1.0)]
-        
-
-        x, y = estado % 4, estado // 4
-
-        proximos_estados = self.acoes_possiveis()
-        # proximos_estados = [
-        # (x, max(y - 1, 0)),  # cima
-        # (x, min(y + 1, 3)),  # baixo
-        # (max(x - 1, 0), y),  # esquerda
-        # (min(x + 1, 3), y)  # direita
-        # ]
-        if acao < 0 or acao >= len(self.acoes):
-            raise ValueError("Ação inválida")
-
-        # estado da ação tem probabilidade de 80%
-        #Aplica_Ação aquela la
-        
-       
-        #(next_x, next_y) = proximos_estados[acao]
-        proximo_estado_acao = self.aplicar_acao(proximos_estados[acao],"P")
-        #proximo_estado_acao = next_y * 4 + next_x
-        transicoes = [(proximo_estado_acao, 1)]
-
-        # outros estados têm 20% ao todo
-        # estados_alternativos = list(proximos_estados)
-        # del estados_alternativos[acao]
-        # prob_escorregar = 0.2 / len(estados_alternativos)
-
-        # for (next_x, next_y) in estados_alternativos:
-        #     proximo_estado_escorregao = next_y * 4 + next_x
-        #     transicoes.append((proximo_estado_escorregao, prob_escorregar))
-
-        return transicoes
-        
-    def R(self, estado, acao, proximo_estado):
-        #estado_valor = self.estados[proximo_estado]
-        estado_valor = proximo_estado
-        
-
-        if self.encontrar_posicao("P")[0] >= 8 :
-            return -0.04    
-        elif self.encontrar_posicao("P")[0] < 8 :
-            return -0.02 
-        elif self.encontrar_posicao("A")[0] == 16:
-            return -10.00
-        elif self.encontrar_posicao("P")[0] == 0:
-            return +10.00
-        else:
-            raise ValueError("Estado inválido: " + estado_valor)
-
-
-
-    def imprimir_q(self, Q):
-        valor_texto = "|\ts\t|\ts\t|\ta\t|\tQ(s,a)\t|\n"
-        for i in range(0, len(self.tabuleiro)):
-            for j in range(0, len(self.acoes)):
-                acao_completa = f"{self.acoes[j][1]}{self.acoes[j][2]}"
-                valor_texto += "|\t%s\t|\t%s\t|\t%s\t|\t%.2f\t|\n" % (i, self.tabuleiro[i], acao_completa, Q[i][j])
-        return valor_texto
-    
+            
     def criar_tabuleiro(self):
         # Cria um tabuleiro 9x9 com espaços vazios ('.') e espaços para barreiras (' ')
         self.tabuleiro = [['.' if (linha % 2 == 0 and coluna % 2 == 0) else ' ' for coluna in range(17)] for linha in range(17)]
@@ -642,7 +599,7 @@ class Quoridor:
             if tabuleiro[linha][coluna1] == '|' or tabuleiro[linha][coluna2] == '|':
                 return False
         return True
-    def jogar(self):
+    def jogarMinimax(self):
         while(True):
 
             if self.turno == "A":
