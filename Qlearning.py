@@ -174,6 +174,8 @@ class QLearningAgent:
             if state['player_turn'] == 1:  # Turno do agente
                 action = agent.choose_action_play(state, env)
                 next_state, reward, done = env.step(action)
+                env.turno = env.oposto(env.turno)
+                env.imprimir_tabuleiro()
 
             # Opponent's turn (assuming the environment handles the opponent's move)
             else:
@@ -191,6 +193,7 @@ class QLearningAgent:
                             print("")
                         else:
                             print(resultado)
+
                 elif(jogada == "P"):
 
                     x = int(input("Digite a Linha: "))
@@ -216,7 +219,6 @@ class QLearningAgent:
                 # state = env.state
 
             env.state['player_turn'] = 1 - env.state['player_turn']
-            env.turno = env.oposto(env.turno)
         
 
     def choose_action_play(self, state, env):
